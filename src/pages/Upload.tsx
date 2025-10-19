@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/Sidebar";
@@ -20,23 +21,26 @@ const Upload = () => {
     }
   };
 
-  const parseCSV = (text: string) => {
-    const lines = text.split("\n");
-    const headers = lines[0].split(",");
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim()) {
-        const values = lines[i].split(",");
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header.trim()] = values[index]?.trim() || "";
-        });
-        data.push(row);
+  const parseTokensArray = (tokensStr: string): string[] => {
+    try {
+      // Remove outer quotes if present
+      const cleaned = tokensStr.trim().replace(/^["']|["']$/g, '');
+      
+      // Parse Python-style list: ['word1', 'word2', ...]
+      if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
+        const content = cleaned.slice(1, -1);
+        // Split by ', ' and remove quotes from each token
+        return content
+          .split("', '")
+          .map(token => token.replace(/^['"]|['"]$/g, '').trim())
+          .filter(token => token.length > 0);
       }
+      
+      return [];
+    } catch (error) {
+      console.error("Error parsing tokens:", error);
+      return [];
     }
-
-    return data;
   };
 
   const handleUpload = async () => {
@@ -53,7 +57,20 @@ const Upload = () => {
 
     try {
       const text = await file.text();
-      const rows = parseCSV(text);
+      
+      // Parse CSV with PapaParse - handles quoted fields correctly
+      const parseResult = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header: string) => header.trim(),
+      });
+
+      if (parseResult.errors.length > 0) {
+        console.error("CSV parsing errors:", parseResult.errors);
+        throw new Error("Invalid CSV format");
+      }
+
+      const rows = parseResult.data;
 
       const {
         data: { user },
@@ -63,19 +80,23 @@ const Upload = () => {
       // Sample emotions for demo purposes (in production, use AI model)
       const emotions = ["joy", "love", "surprise", "anger", "sadness", "fear", "neutral"];
 
-      const reviewsToInsert = rows.slice(0, 50).map((row) => ({
-        product_id: row.ProductId || "",
-        user_id: user.id,
-        profile_name: row.ProfileName || "Anonymous",
-        score: parseInt(row.Score) || 3,
-        summary: row.Summary || "",
-        text: row.Text || "",
-        clean_text: row.clean_text || "",
-        tokens: row.tokens ? JSON.parse(row.tokens.replace(/'/g, '"')) : [],
-        token_count: parseInt(row.token_count) || 0,
-        emotion: emotions[Math.floor(Math.random() * emotions.length)],
-        keywords: row.tokens ? JSON.parse(row.tokens.replace(/'/g, '"')).slice(0, 5) : [],
-      }));
+      const reviewsToInsert = rows.slice(0, 50).map((row: any) => {
+        const parsedTokens = parseTokensArray(row.tokens || "");
+        
+        return {
+          product_id: row.ProductId || "",
+          user_id: user.id,
+          profile_name: row.ProfileName || "Anonymous",
+          score: parseInt(row.Score) || 3,
+          summary: row.Summary || "",
+          text: row.Text || "",
+          clean_text: row.clean_text || "",
+          tokens: parsedTokens,
+          token_count: parseInt(row.token_count) || parsedTokens.length,
+          emotion: emotions[Math.floor(Math.random() * emotions.length)],
+          keywords: parsedTokens.slice(0, 5),
+        };
+      });
 
       const { error } = await supabase.from("reviews").insert(reviewsToInsert);
 
@@ -88,6 +109,7 @@ const Upload = () => {
 
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (error: any) {
+      console.error("Upload error:", error);
       toast({
         title: "Upload failed",
         description: error.message,
