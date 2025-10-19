@@ -23,6 +23,7 @@ const Sidebar = () => {
     { icon: Home, label: "Home", path: "/" },
     { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
     { icon: Upload, label: "Upload Reviews", path: "/upload" },
+    { icon: BarChart3, label: "Analytics", path: "/analytics" },
     { icon: Sparkles, label: "Insights", path: "/insights" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
