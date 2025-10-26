@@ -1,73 +1,45 @@
-# Welcome to your Lovable project
+# Emotion Bubble Explorer
 
-## Project info
+## Executive Summary
+The Emotion Bubble Explorer project is an interactive web application designed to visualize and analyze users’ emotional data. By mapping emotions into dynamic bubble charts on the website, users and analysts can identify patterns, track emotional intensity, and explore trends over time. The project combines data analysis, visualization, and web development to create an engaging and insightful experience.
 
-**URL**: https://lovable.dev/projects/c25452d4-7ccd-4369-a37c-0b2369340b66
+## Business Problem
+Understanding emotional trends is critical for applications in mental wellness, user engagement, or sentiment tracking. This project aims to answer questions such as:
 
-## How can I edit this code?
+- What are the most common emotions expressed by users, and how do they change over time?  
+- How does emotion intensity fluctuate across different activities or contexts?  
+- How can interactive visualization help users and analysts gain actionable insights?  
 
-There are several ways of editing your application.
+## Methodology
+**Data Collection:** Gathered emotion data through surveys, self-reports, and app interactions, including emotion type, intensity, and timestamp.  
 
-**Use Lovable**
+**Data Cleaning:** Handled missing values, removed inconsistencies, and standardized emotion categories.  
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c25452d4-7ccd-4369-a37c-0b2369340b66) and start prompting.
+**Exploratory Data Analysis (EDA):** Identified trends, correlations, and patterns using Python and statistical methods.  
 
-Changes made via Lovable will be committed automatically to this repo.
+**Visualization & Website Development:**  
+- Created interactive bubble charts with Plotly to represent emotion intensity, type, and frequency.  
+- Built a web interface using **HTML, CSS, JavaScript**, and **Plotly Dash** for dynamic, user-friendly exploration of emotional data.  
 
-**Use your preferred IDE**
+## Skills Utilized
+- **Data Analysis:** Python, Pandas, NumPy  
+- **Data Visualization:** Plotly, Power BI  
+- **Web Development:** HTML, CSS, JavaScript, Plotly Dash  
+- **Statistical Analysis:** Descriptive statistics, correlation analysis  
+- **Business Intelligence:** Sentiment analysis, emotional trend mapping  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Results & Recommendations
+**Key Findings:**  
+- Users commonly experienced emotions such as [list top emotions].  
+- Intensity patterns varied with time and activity, providing insights for user engagement or wellness interventions.  
+- Interactive visualization on the website enabled intuitive exploration of complex emotional data.  
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Recommendations:**  
+- **User Engagement:** Personalize app content based on emotional trends.  
+- **Wellness Interventions:** Identify stress points and provide support resources.  
+- **UX Improvements:** Enhance website features based on user interaction patterns.  
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c25452d4-7ccd-4369-a37c-0b2369340b66) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Next Steps
+- **Emotion Segmentation:** Analyze patterns by demographics or behavior.  
+- **Predictive Analytics:** Forecast emotions and suggest proactive interventions.  
+- **Website Enhancement:** Add more interactive features, real-time updates, and user customization options.  
