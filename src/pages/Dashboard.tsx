@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/Sidebar";
 import BubbleChart from "@/components/BubbleChart";
 import { Button } from "@/components/ui/button";
-import { Sparkles, TrendingUp, Users, Star } from "lucide-react";
+import { Sparkles, TrendingUp, Users, Star, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Review {
@@ -17,36 +17,64 @@ interface Review {
   emotion: string;
   keywords: string[];
   profile_name: string;
+  created_at?: string;
 }
 
 const Dashboard = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [generatingInsights, setGeneratingInsights] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    checkAuth();
-    fetchReviews();
-  }, []);
-
-  const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
-
-  const fetchReviews = async () => {
+  const checkAuth = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from("reviews").select("*").limit(100);
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!session) {
+        navigate("/auth");
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Authentication error",
+        description: error.message,
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return false;
+    }
+  }, [navigate, toast]);
+
+  const fetchReviews = useCallback(async (showRefresh = false) => {
+    if (showRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      // Remove the limit to get all reviews, or increase it if you have large datasets
+      const { data, error, count } = await supabase
+        .from("reviews")
+        .select("*", { count: 'exact' })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      console.log(`Fetched ${data?.length || 0} reviews`);
       setReviews(data || []);
+
+      if (data && data.length === 0) {
+        toast({
+          title: "No reviews found",
+          description: "Upload a CSV file to get started",
+        });
+      }
     } catch (error: any) {
+      console.error("Error fetching reviews:", error);
       toast({
         title: "Error loading reviews",
         description: error.message,
@@ -54,18 +82,40 @@ const Dashboard = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    const initializeDashboard = async () => {
+      const isAuthenticated = await checkAuth();
+      if (isAuthenticated) {
+        await fetchReviews();
+      }
+    };
+
+    initializeDashboard();
+  }, [checkAuth, fetchReviews]);
 
   const generateInsights = async () => {
+    if (reviews.length === 0) {
+      toast({
+        title: "No reviews available",
+        description: "Please upload reviews first to generate insights",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setGeneratingInsights(true);
     try {
-      // This will be connected to AI insights functionality
       toast({
         title: "Generating insights... 🤖",
         description: "AI is analyzing your reviews!",
       });
-      // TODO: Connect to AI insights edge function
+      
+      // Add a small delay to show the loading state
+      await new Promise(resolve => setTimeout(resolve, 1000));
       navigate("/insights");
     } catch (error: any) {
       toast({
@@ -78,15 +128,21 @@ const Dashboard = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchReviews(true);
+  };
+
+  // Calculate statistics
   const stats = {
     total: reviews.length,
     avgScore: reviews.length > 0
-      ? (reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length).toFixed(1)
-      : "0",
+      ? (reviews.reduce((acc, r) => acc + (r.score || 0), 0) / reviews.length).toFixed(1)
+      : "0.0",
     topEmotion: reviews.length > 0
       ? Object.entries(
           reviews.reduce((acc, r) => {
-            acc[r.emotion || "neutral"] = (acc[r.emotion || "neutral"] || 0) + 1;
+            const emotion = r.emotion || "neutral";
+            acc[emotion] = (acc[emotion] || 0) + 1;
             return acc;
           }, {} as Record<string, number>)
         ).sort(([, a], [, b]) => b - a)[0]?.[0] || "N/A"
@@ -117,24 +173,35 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div>
               <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Emotion Dashboard
               </h1>
               <p className="text-muted-foreground mt-2">
-                Visualize sentiment across food reviews
+                Visualize sentiment across {reviews.length} food reviews
               </p>
             </div>
-            <Button
-              onClick={generateInsights}
-              disabled={generatingInsights || reviews.length === 0}
-              className="bg-gradient-primary hover:shadow-float transition-all"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              {generatingInsights ? "Generating..." : "AI Insights"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+              <Button
+                onClick={generateInsights}
+                disabled={generatingInsights || reviews.length === 0}
+                className="bg-gradient-primary hover:shadow-float transition-all flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                {generatingInsights ? "Generating..." : "AI Insights"}
+              </Button>
+            </div>
           </motion.div>
 
           {/* Stats */}
@@ -151,6 +218,9 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-primary">{stats.total}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    All time reviews
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -167,6 +237,9 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-accent">{stats.avgScore}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Out of 5 stars
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -185,6 +258,9 @@ const Dashboard = () => {
                   <div className="text-3xl font-bold text-secondary capitalize">
                     {stats.topEmotion}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Most frequent sentiment
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -198,6 +274,12 @@ const Dashboard = () => {
               transition={{ delay: 0.4 }}
               className="min-h-[600px]"
             >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Emotion Visualization</h2>
+                <div className="text-sm text-muted-foreground">
+                  Showing {reviews.length} reviews
+                </div>
+              </div>
               <BubbleChart reviews={reviews} />
             </motion.div>
           ) : (
