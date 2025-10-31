@@ -7,17 +7,30 @@ import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload as UploadIcon, FileText, CheckCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Upload as UploadIcon, FileText, CheckCircle, Loader2, Database, FileCheck, Users, BarChart3 } from "lucide-react";
 
 const Upload = () => {
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [currentStep, setCurrentStep] = useState<string>("");
+  const [progress, setProgress] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentActivity, setCurrentActivity] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      // Reset progress when new file is selected
+      setProgress(0);
+      setProcessedCount(0);
+      setTotalCount(0);
+      setCurrentStep("");
+      setCurrentActivity("");
     }
   };
 
@@ -43,6 +56,13 @@ const Upload = () => {
     }
   };
 
+  const updateProgress = (current: number, total: number, activity: string) => {
+    setProcessedCount(current);
+    setTotalCount(total);
+    setProgress(Math.round((current / total) * 100));
+    setCurrentActivity(activity);
+  };
+
   const handleUpload = async () => {
     if (!file) {
       toast({
@@ -54,9 +74,17 @@ const Upload = () => {
     }
 
     setUploading(true);
+    setProgress(0);
+    setProcessedCount(0);
+    setCurrentStep("initializing");
 
     try {
+      setCurrentActivity("Reading file...");
       const text = await file.text();
+      console.log("CSV file content:", text);
+      
+      setCurrentStep("parsing");
+      setCurrentActivity("Parsing CSV data...");
       
       // Parse CSV with PapaParse - handles quoted fields correctly
       const parseResult = Papa.parse(text, {
@@ -71,6 +99,10 @@ const Upload = () => {
       }
 
       const rows = parseResult.data;
+      setTotalCount(rows.length);
+
+      setCurrentStep("authentication");
+      setCurrentActivity("Authenticating user...");
 
       const {
         data: { user },
@@ -80,7 +112,12 @@ const Upload = () => {
       // Sample emotions for demo purposes (in production, use AI model)
       const emotions = ["joy", "love", "surprise", "anger", "sadness", "fear", "neutral"];
 
-      const reviewsToInsert = rows.slice(0, 50).map((row: any) => {
+      setCurrentStep("processing");
+      setCurrentActivity("Processing reviews data...");
+
+      const reviewsToInsert = rows.slice(0, 50).map((row: any, index: number) => {
+        updateProgress(index + 1, rows.length, "Processing reviews...");
+        
         const parsedTokens = parseTokensArray(row.tokens || "");
         
         return {
@@ -98,9 +135,26 @@ const Upload = () => {
         };
       });
 
+      setCurrentStep("uploading");
+      setCurrentActivity("Uploading to database...");
+      updateProgress(0, reviewsToInsert.length, "Uploading reviews...");
+
+      // Simulate progress during upload
+      for (let i = 0; i < reviewsToInsert.length; i += 10) {
+        const batch = reviewsToInsert.slice(i, i + 10);
+        updateProgress(i + batch.length, reviewsToInsert.length, "Uploading to database...");
+        
+        // Small delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       const { error } = await supabase.from("reviews").insert(reviewsToInsert);
 
       if (error) throw error;
+
+      setCurrentStep("completed");
+      setCurrentActivity("Upload completed!");
+      setProgress(100);
 
       toast({
         title: "Success! 🎉",
@@ -110,6 +164,8 @@ const Upload = () => {
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (error: any) {
       console.error("Upload error:", error);
+      setCurrentStep("error");
+      setCurrentActivity(`Error: ${error.message}`);
       toast({
         title: "Upload failed",
         description: error.message,
@@ -118,6 +174,33 @@ const Upload = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const getStepIcon = (step: string) => {
+    switch (step) {
+      case "initializing":
+        return <Loader2 className="w-4 h-4 animate-spin" />;
+      case "parsing":
+        return <FileCheck className="w-4 h-4" />;
+      case "authentication":
+        return <Users className="w-4 h-4" />;
+      case "processing":
+        return <BarChart3 className="w-4 h-4" />;
+      case "uploading":
+        return <Database className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "error":
+        return <Loader2 className="w-4 h-4 text-destructive" />;
+      default:
+        return <Loader2 className="w-4 h-4" />;
+    }
+  };
+
+  const getStepColor = (step: string) => {
+    if (step === "error") return "text-destructive";
+    if (step === "completed") return "text-green-600";
+    return "text-primary";
   };
 
   return (
@@ -130,7 +213,7 @@ const Upload = () => {
           className="max-w-2xl mx-auto space-y-8"
         >
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-primary bg-clip-text text-transparent">
               Upload Reviews
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -185,14 +268,64 @@ const Upload = () => {
                 </label>
               </div>
 
+              {/* Progress and Activity Indicator */}
+              {(uploading || currentStep) && (
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getStepIcon(currentStep)}
+                        <span className={`font-medium ${getStepColor(currentStep)}`}>
+                          {currentActivity || "Preparing..."}
+                        </span>
+                      </div>
+                      <Badge variant="secondary">
+                        {processedCount}/{totalCount}
+                      </Badge>
+                    </div>
+                    
+                    <Progress value={progress} className="h-2" />
+                    
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Step: {currentStep || "Waiting..."}</span>
+                      <span>{progress}%</span>
+                    </div>
+
+                    {/* Detailed Progress Steps */}
+                    {uploading && (
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className={`text-center p-2 rounded ${currentStep === "parsing" ? "bg-primary/20" : ""}`}>
+                          Parsing
+                        </div>
+                        <div className={`text-center p-2 rounded ${currentStep === "processing" ? "bg-primary/20" : ""}`}>
+                          Processing
+                        </div>
+                        <div className={`text-center p-2 rounded ${currentStep === "uploading" ? "bg-primary/20" : ""}`}>
+                          Uploading
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               <Button
                 onClick={handleUpload}
                 disabled={!file || uploading}
-                className="w-full bg-gradient-primary hover:shadow-float transition-all"
+                className="w-full bg-primary hover:shadow-float transition-all"
                 size="lg"
               >
-                <UploadIcon className="w-5 h-5 mr-2" />
-                {uploading ? "Uploading..." : "Upload & Process"}
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <UploadIcon className="w-5 h-5 mr-2" />
+                    Upload & Process
+                  </>
+                )}
               </Button>
 
               <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground">
@@ -201,6 +334,9 @@ const Upload = () => {
                   <li>ProductId, ProfileName, Score, Summary, Text</li>
                   <li>clean_text, tokens, token_count (optional)</li>
                   <li>Maximum 50 reviews per upload</li>
+                  <a href="/sample_file.csv" className="text-primary hover:underline">
+                    <li>Sample file Download</li>
+                  </a>
                 </ul>
               </div>
             </CardContent>

@@ -86,13 +86,13 @@ const Auth = () => {
         <Card className="w-full max-w-md shadow-float border-2">
           <CardHeader className="text-center space-y-2">
             <motion.div
-              className="mx-auto bg-gradient-primary w-20 h-20 rounded-full flex items-center justify-center shadow-bubble"
+              className="mx-auto bg-primary w-20 h-20 rounded-full flex items-center justify-center shadow-bubble"
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
             >
               <UtensilsCrossed className="w-10 h-10 text-white" />
             </motion.div>
-            <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold bg-primary bg-clip-text text-transparent">
               Emotion Bubble Explorer
             </CardTitle>
             <CardDescription className="text-base">
@@ -141,7 +141,7 @@ const Auth = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-gradient-primary hover:shadow-float transition-all"
+                className="w-full bg-primary hover:shadow-float transition-all"
                 disabled={loading}
               >
                 {loading ? (

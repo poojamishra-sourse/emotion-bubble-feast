@@ -22,7 +22,7 @@ const Index = () => {
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ duration: 0.8, type: "spring" }}
-            className="mx-auto w-32 h-32 bg-gradient-primary rounded-full flex items-center justify-center shadow-float"
+            className="mx-auto w-32 h-32 bg-primary rounded-full flex items-center justify-center shadow-float"
           >
             <UtensilsCrossed className="w-16 h-16 text-white" />
           </motion.div>
@@ -32,7 +32,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-6xl md:text-7xl font-bold bg-gradient-primary bg-clip-text text-transparent"
+            className="text-6xl md:text-7xl font-bold bg-primary bg-clip-text text-transparent"
           >
             Emotion Bubble Explorer
           </motion.h1>
@@ -58,7 +58,7 @@ const Index = () => {
             <Button
               onClick={() => navigate("/auth")}
               size="lg"
-              className="bg-gradient-primary hover:shadow-float transition-all text-lg px-8"
+              className="bg-primary hover:shadow-float transition-all text-lg px-8"
             >
               <Sparkles className="w-5 h-5 mr-2" />
               Get Started
@@ -109,7 +109,7 @@ const Index = () => {
               transition={{ delay: 1 + index * 0.2 }}
               className="bg-card rounded-2xl p-8 shadow-card border-2 hover:shadow-float transition-all"
             >
-              <div className="bg-gradient-primary w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-bubble">
+              <div className="bg-primary w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-bubble">
                 <feature.icon className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
