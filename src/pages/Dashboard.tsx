@@ -176,7 +176,7 @@ const Dashboard = () => {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-primary bg-clip-text text-transparent">
                 Emotion Dashboard
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -196,7 +196,7 @@ const Dashboard = () => {
               <Button
                 onClick={generateInsights}
                 disabled={generatingInsights || reviews.length === 0}
-                className="bg-gradient-primary hover:shadow-float transition-all flex items-center gap-2"
+                className="bg-primary hover:shadow-float transition-all flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 {generatingInsights ? "Generating..." : "AI Insights"}

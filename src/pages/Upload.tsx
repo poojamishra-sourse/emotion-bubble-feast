@@ -213,7 +213,7 @@ const Upload = () => {
           className="max-w-2xl mx-auto space-y-8"
         >
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-primary bg-clip-text text-transparent">
               Upload Reviews
             </h1>
             <p className="text-muted-foreground mt-2">

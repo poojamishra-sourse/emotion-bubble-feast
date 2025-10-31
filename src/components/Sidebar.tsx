@@ -49,11 +49,11 @@ const Sidebar = () => {
           className="flex items-center gap-3"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="bg-gradient-primary w-12 h-12 rounded-2xl flex items-center justify-center shadow-bubble">
+          <div className="bg-primary w-12 h-12 rounded-2xl flex items-center justify-center shadow-bubble">
             <UtensilsCrossed className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="font-bold text-lg bg-primary bg-clip-text text-transparent">
               Emotion Bubble
             </h1>
             <p className="text-xs text-muted-foreground">Explorer</p>
@@ -77,7 +77,7 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive
-                    ? "bg-gradient-primary text-white shadow-bubble"
+                    ? "bg-primary text-white shadow-bubble"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`
               }

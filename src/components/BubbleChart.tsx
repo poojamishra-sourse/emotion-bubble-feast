@@ -187,7 +187,7 @@ const BubbleChart = ({ reviews }: BubbleChartProps) => {
       <Dialog open={!!selectedReview} onOpenChange={() => setSelectedReview(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+            <DialogTitle className="text-2xl bg-primary bg-clip-text text-transparent">
               {selectedReview?.summary}
             </DialogTitle>
           </DialogHeader>
